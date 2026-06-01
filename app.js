@@ -115,9 +115,13 @@
   function normalizeSize(value) {
     return String(value || "")
       .toUpperCase()
+      .replace(/[‐‑‒–—−]/g, "-")
       .replace(/YOUTH/g, "KIDS")
       .replace(/CHILD/g, "KIDS")
-      .replace(/X LARGE|XL/g, "X-LARGE")
+      .replace(/\bX\s*-\s*LARGE\b/g, "X-LARGE")
+      .replace(/\bX\s+LARGE\b/g, "X-LARGE")
+      .replace(/\bX\s*LARGE\b/g, "X-LARGE")
+      .replace(/\bXL\b/g, "X-LARGE")
       .replace(/\s+/g, " ")
       .trim();
   }
