@@ -4,7 +4,6 @@ This is a small browser app for camp Excel files.
 
 It lets you:
 
-- open the app after entering the password `FCBadmin`
 - upload an `.xlsx`, `.xls`, or `.csv` file
 - choose the worksheet tab to use
 - summarize shirt, shorts, and sock sizes

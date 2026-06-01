@@ -22,14 +22,8 @@
   ];
   const SOCK_SIZES = ["34-38", "39-42", "43-46", "47+"];
   const CAMP_NUMBERS = ["1", "2", "3"];
-  const APP_PASSWORD = "FCBadmin";
-  const AUTH_KEY = "fcb-camp-auth";
 
   const el = {
-    loginScreen: document.querySelector("#loginScreen"),
-    loginForm: document.querySelector("#loginForm"),
-    passwordInput: document.querySelector("#passwordInput"),
-    loginError: document.querySelector("#loginError"),
     appShell: document.querySelector("#appShell"),
     fileInput: document.querySelector("#fileInput"),
     loadStatus: document.querySelector("#loadStatus"),
@@ -55,25 +49,6 @@
     rosterPanel: document.querySelector("#rosterPanel"),
     groupsPreview: document.querySelector("#groupsPreview"),
   };
-
-  function unlockApp() {
-    sessionStorage.setItem(AUTH_KEY, "yes");
-    document.body.classList.remove("auth-locked");
-    el.loginScreen.hidden = true;
-    el.appShell.hidden = false;
-  }
-
-  function lockApp() {
-    document.body.classList.add("auth-locked");
-    el.loginScreen.hidden = false;
-    el.appShell.hidden = true;
-    el.passwordInput.focus();
-  }
-
-  function checkAuth() {
-    if (sessionStorage.getItem(AUTH_KEY) === "yes") unlockApp();
-    else lockApp();
-  }
 
   const state = {
     workbook: null,
@@ -838,21 +813,9 @@
   el.resetButton.addEventListener("click", reset);
   el.sizeViewButton.addEventListener("click", () => setActiveView("size"));
   el.groupsViewButton.addEventListener("click", () => setActiveView("groups"));
-  el.loginForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    if (el.passwordInput.value === APP_PASSWORD) {
-      el.passwordInput.value = "";
-      el.loginError.textContent = "";
-      unlockApp();
-      return;
-    }
-    el.loginError.textContent = "Password not recognized.";
-    el.passwordInput.select();
-  });
   window.addEventListener("afterprint", () => {
     document.body.classList.remove("print-dashboard", "print-groups");
   });
   loadSampleFromQuery();
   setActiveView(state.activeView);
-  checkAuth();
 })();

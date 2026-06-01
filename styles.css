@@ -45,42 +45,6 @@ select {
   padding: 28px 0 48px;
 }
 
-.login-screen {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 24px;
-}
-
-.login-card {
-  width: min(460px, 100%);
-  border: 1px solid rgba(246, 207, 79, 0.72);
-  border-radius: 8px;
-  background:
-    linear-gradient(120deg, rgba(255, 250, 240, 0.98), rgba(255, 245, 224, 0.94)),
-    var(--paper);
-  box-shadow: 0 22px 54px rgba(30, 10, 22, 0.35);
-  padding: 28px;
-}
-
-.login-card h1 {
-  margin-bottom: 22px;
-  color: var(--blue);
-  font-size: 36px;
-}
-
-.login-card button {
-  width: 100%;
-  margin-top: 14px;
-}
-
-.login-error {
-  min-height: 22px;
-  margin: 12px 0 0;
-  color: #a31321;
-  font-weight: 800;
-}
-
 .topbar {
   display: flex;
   align-items: flex-start;
@@ -208,8 +172,7 @@ label {
 
 select,
 input[type="text"],
-input[type="number"],
-input[type="password"] {
+input[type="number"] {
   width: 100%;
   min-height: 42px;
   border: 1px solid rgba(24, 63, 134, 0.35);
