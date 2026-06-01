@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Camp Excel Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="vendor/xlsx.full.min.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Camp Roster Tool</p>
+          <h1>Upload Excel, choose a tab, and build the dashboard.</h1>
+        </div>
+        <button class="ghost-button" id="resetButton" type="button" hidden>Start over</button>
+      </section>
+
+      <section class="panel upload-panel" id="uploadPanel">
+        <label class="drop-zone" for="fileInput">
+          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+          <span class="upload-icon" aria-hidden="true">+</span>
+          <strong>Choose an Excel file</strong>
+          <small>The file stays in this browser. After upload, pick the worksheet tab.</small>
+        </label>
+        <p class="status" id="loadStatus" role="status"></p>
+      </section>
+
+      <section class="view-switcher" aria-label="App sections">
+        <button class="view-button active" id="sizeViewButton" type="button" data-view="size">Size dashboard</button>
+        <button class="view-button" id="groupsViewButton" type="button" data-view="groups">Group generator</button>
+      </section>
+
+      <section class="panel controls-panel" id="controlsPanel" hidden>
+        <div class="control-group">
+          <label for="sheetSelect">Worksheet tab</label>
+          <select id="sheetSelect"></select>
+        </div>
+        <div class="control-group">
+          <label for="sortSelect">Birthday sort</label>
+          <select id="sortSelect">
+            <option value="oldest">Oldest kids first</option>
+            <option value="youngest">Youngest kids first</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="campSelect">Camp</label>
+          <select id="campSelect"></select>
+        </div>
+        <div class="actions">
+          <button id="exportButton" type="button">Download Excel report</button>
+        </div>
+      </section>
+
+      <section class="summary-grid" id="summaryGrid" hidden>
+        <article class="stat-card">
+          <span>Total kids</span>
+          <strong id="kidCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Groups of 12</span>
+          <strong id="groupCount">0</strong>
+        </article>
+        <article class="stat-card">
+          <span>Chosen tab</span>
+          <strong id="activeSheetName">-</strong>
+        </article>
+      </section>
+
+      <section class="panel dashboard-panel" id="dashboardPanel" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Size dashboard</h2>
+            <p>Enter current stock to see the difference automatically.</p>
+          </div>
+          <div class="button-row">
+            <button class="secondary-button" id="printDashboardButton" type="button">Print / PDF</button>
+            <button class="secondary-button" id="csvDashboardButton" type="button">Download CSV</button>
+          </div>
+        </div>
+        <div id="dashboardTables" class="dashboard-tables"></div>
+      </section>
+
+      <section class="panel roster-panel" id="rosterPanel" hidden>
+        <div class="section-heading">
+          <div>
+            <h2>Group generator</h2>
+            <p>Groups are made by birthday, then each group is sorted by last name.</p>
+          </div>
+          <div class="button-row">
+            <button class="secondary-button" id="printGroupsButton" type="button">Print / PDF</button>
+            <button class="secondary-button" id="csvGroupsButton" type="button">Download CSV</button>
+          </div>
+        </div>
+        <div id="groupsPreview" class="groups-preview"></div>
+      </section>
+    </main>
+  </body>
+</html>
