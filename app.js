@@ -22,8 +22,15 @@
   ];
   const SOCK_SIZES = ["34-38", "39-42", "43-46", "47+"];
   const CAMP_NUMBERS = ["1", "2", "3"];
+  const APP_PASSWORD = "FCBadmin";
+  const AUTH_KEY = "fcb-camp-auth";
 
   const el = {
+    loginScreen: document.querySelector("#loginScreen"),
+    loginForm: document.querySelector("#loginForm"),
+    passwordInput: document.querySelector("#passwordInput"),
+    loginError: document.querySelector("#loginError"),
+    appShell: document.querySelector("#appShell"),
     fileInput: document.querySelector("#fileInput"),
     loadStatus: document.querySelector("#loadStatus"),
     uploadPanel: document.querySelector("#uploadPanel"),
@@ -49,6 +56,25 @@
     groupsPreview: document.querySelector("#groupsPreview"),
   };
 
+  function unlockApp() {
+    sessionStorage.setItem(AUTH_KEY, "yes");
+    document.body.classList.remove("auth-locked");
+    el.loginScreen.hidden = true;
+    el.appShell.hidden = false;
+  }
+
+  function lockApp() {
+    document.body.classList.add("auth-locked");
+    el.loginScreen.hidden = false;
+    el.appShell.hidden = true;
+    el.passwordInput.focus();
+  }
+
+  function checkAuth() {
+    if (sessionStorage.getItem(AUTH_KEY) === "yes") unlockApp();
+    else lockApp();
+  }
+
   const state = {
     workbook: null,
     rows: [],
@@ -60,6 +86,7 @@
     fileLabel: "",
     coaches: {},
     campAssignments: {},
+    groupSorts: {},
     activeView: "size",
   };
 
@@ -201,6 +228,21 @@
     return String(a.firstName || "").localeCompare(String(b.firstName || ""), undefined, { sensitivity: "base" });
   }
 
+  function compareValues(a, b) {
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return String(a ?? "").localeCompare(String(b ?? ""), undefined, { numeric: true, sensitivity: "base" });
+  }
+
+  function getKidSortValue(kid, key, index) {
+    if (key === "row") return index + 1;
+    if (key === "firstName") return kid.firstName || "";
+    if (key === "lastName") return kid.lastName || "";
+    if (key === "age") return kid.age === "" ? -1 : Number(kid.age);
+    if (key === "gender") return kid.gender || "";
+    if (key === "group") return "";
+    return "";
+  }
+
   function groupLetterForIndex(index) {
     let number = index;
     let letters = "";
@@ -227,6 +269,31 @@
       });
     }
     return groups;
+  }
+
+  function getGroupSort(group) {
+    return state.groupSorts[group.letter] || { key: "lastName", direction: "asc" };
+  }
+
+  function sortedGroupKids(group) {
+    const sort = getGroupSort(group);
+    const direction = sort.direction === "desc" ? -1 : 1;
+    return group.kids
+      .map((kid, index) => ({ kid, index }))
+      .sort((a, b) => {
+      const value = compareValues(getKidSortValue(a.kid, sort.key, a.index), getKidSortValue(b.kid, sort.key, b.index));
+      if (value) return value * direction;
+      return compareKidsByLastName(a.kid, b.kid);
+    })
+      .map((item) => item.kid);
+  }
+
+  function setGroupSort(group, key) {
+    const current = getGroupSort(group);
+    state.groupSorts[group.letter] = {
+      key,
+      direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
+    };
   }
 
   function activeGroups() {
@@ -399,12 +466,19 @@
     ].join("");
   }
 
+  function renderSortHeader(group, key, label) {
+    const sort = getGroupSort(group);
+    const active = sort.key === key;
+    const arrow = active ? (sort.direction === "asc" ? " ▲" : " ▼") : "";
+    return `<button class="sort-header ${active ? "active" : ""}" type="button" data-group="${group.number}" data-sort="${key}" aria-label="Sort group ${group.letter} by ${label}">${label}${arrow}</button>`;
+  }
+
   function renderGroups() {
     el.groupsPreview.innerHTML = "";
     activeGroups().forEach((group) => {
       const card = document.createElement("article");
       card.className = "group-card";
-      const rows = Array.from({ length: GROUP_SIZE }, (_, index) => group.kids[index] || null);
+      const rows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
       const assignedCamp = getGroupCamp(group);
       card.innerHTML = `
         <div class="group-meta">
@@ -431,12 +505,12 @@
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Age</th>
-              <th>Gender</th>
-              <th>Group</th>
+              <th>${renderSortHeader(group, "row", "#")}</th>
+              <th>${renderSortHeader(group, "firstName", "First Name")}</th>
+              <th>${renderSortHeader(group, "lastName", "Last Name")}</th>
+              <th>${renderSortHeader(group, "age", "Age")}</th>
+              <th>${renderSortHeader(group, "gender", "Gender")}</th>
+              <th>${renderSortHeader(group, "group", "Group")}</th>
             </tr>
           </thead>
           <tbody>
@@ -472,6 +546,17 @@
         const group = state.groups.find((candidate) => String(candidate.number) === select.dataset.group);
         if (group) {
           setGroupCamp(group, select.value);
+          renderGroups();
+        }
+      });
+    });
+    document.querySelectorAll(".sort-header").forEach((button) => {
+      button.addEventListener("click", () => {
+        captureCoachInputs();
+        captureCampAssignments();
+        const group = state.groups.find((candidate) => String(candidate.number) === button.dataset.group);
+        if (group) {
+          setGroupSort(group, button.dataset.sort);
           renderGroups();
         }
       });
@@ -578,7 +663,7 @@
       [],
       ["#", "First Name", "Last Name", "Age", "Gender", "Group"],
     ];
-    const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => group.kids[index] || null);
+    const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
     rosterRows.forEach((kid, index) => {
       rows.push([index + 1, kid?.firstName || "", kid?.lastName || "", kid?.age ?? "", kid?.gender || "", groupLabel(group)]);
     });
@@ -671,7 +756,7 @@
       rows.push([`Camp ${getGroupCamp(group) || "Unassigned"}`, `Group ${group.letter}`]);
       rows.push(["FCB Coach", getCoach(group, "fcb"), "Aux. Coach", getCoach(group, "aux")]);
       rows.push(["#", "First Name", "Last Name", "Age", "Gender", "Group"]);
-      const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => group.kids[index] || null);
+      const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
       rosterRows.forEach((kid, index) => {
         rows.push([index + 1, kid?.firstName || "", kid?.lastName || "", kid?.age ?? "", kid?.gender || "", groupLabel(group)]);
       });
@@ -746,9 +831,21 @@
   el.resetButton.addEventListener("click", reset);
   el.sizeViewButton.addEventListener("click", () => setActiveView("size"));
   el.groupsViewButton.addEventListener("click", () => setActiveView("groups"));
+  el.loginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (el.passwordInput.value === APP_PASSWORD) {
+      el.passwordInput.value = "";
+      el.loginError.textContent = "";
+      unlockApp();
+      return;
+    }
+    el.loginError.textContent = "Password not recognized.";
+    el.passwordInput.select();
+  });
   window.addEventListener("afterprint", () => {
     document.body.classList.remove("print-dashboard", "print-groups");
   });
   loadSampleFromQuery();
   setActiveView(state.activeView);
+  checkAuth();
 })();
