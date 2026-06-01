@@ -40,7 +40,7 @@
       </section>
 
       <section class="view-switcher" aria-label="App sections">
-        <button class="view-button active" id="sizeViewButton" type="button" data-view="size">Size dashboard</button>
+        <button class="view-button active" id="sizeViewButton" type="button" data-view="size">Inventory</button>
         <button class="view-button" id="groupsViewButton" type="button" data-view="groups">Group generator</button>
       </section>
 
@@ -52,8 +52,8 @@
         <div class="control-group">
           <label for="sortSelect">Birthday sort</label>
           <select id="sortSelect">
+            <option value="youngest" selected>Youngest kids first</option>
             <option value="oldest">Oldest kids first</option>
-            <option value="youngest">Youngest kids first</option>
           </select>
         </div>
         <div class="control-group">
@@ -83,7 +83,7 @@
       <section class="panel dashboard-panel" id="dashboardPanel" hidden>
         <div class="section-heading">
           <div>
-            <h2>Size dashboard</h2>
+            <h2>Inventory</h2>
             <p>Enter current stock to see the difference automatically.</p>
           </div>
           <div class="button-row">

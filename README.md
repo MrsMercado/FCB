@@ -10,8 +10,8 @@ It lets you:
 - summarize shirt, shorts, and sock sizes
 - enter current shirt, shorts, and socks stock and see the difference
 - remember stock numbers in the same browser
-- print the size dashboard or save it as PDF
-- download the size dashboard as CSV
+- print the inventory or save it as PDF
+- download the inventory as CSV
 - sort kids by date of birth
 - create groups of 12
 - sort each finished group by player last name
