@@ -2,7 +2,7 @@
   "use strict";
 
   const GROUP_SIZE = 12;
-  const GROUP_SIZE_OPTIONS = [12, 13];
+  const GROUP_SIZE_OPTIONS = [10, 11, 12, 13, 14, 15, 16];
   const SHIRT_SIZES = [
     "KIDS SMALL",
     "KIDS MEDIUM",
