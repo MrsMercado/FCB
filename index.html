@@ -41,8 +41,8 @@
         <div class="control-group">
           <label for="sortSelect">Birthday sort</label>
           <select id="sortSelect">
-            <option value="youngest" selected>Youngest kids first</option>
-            <option value="oldest">Oldest kids first</option>
+            <option value="youngest" selected>Youngest players first</option>
+            <option value="oldest">Oldest players first</option>
           </select>
         </div>
         <div class="control-group">
@@ -56,7 +56,7 @@
 
       <section class="summary-grid" id="summaryGrid" hidden>
         <article class="stat-card">
-          <span>Total kids</span>
+          <span>Total players</span>
           <strong id="kidCount">0</strong>
         </article>
         <article class="stat-card">
@@ -95,10 +95,11 @@
           </div>
         </div>
         <div class="move-panel" id="movePanel" hidden>
-          <strong id="selectedKidLabel">No kid selected</strong>
+          <strong id="selectedKidLabel">No player selected</strong>
           <label for="moveTargetSelect">Move to</label>
           <select id="moveTargetSelect"></select>
-          <button id="moveKidButton" type="button">Move kid</button>
+          <button id="moveKidButton" type="button">Move player</button>
+          <button class="danger-button" id="deleteSelectedKidButton" type="button">Delete player</button>
           <button class="secondary-button" id="clearSelectedKidButton" type="button">Clear</button>
           <p id="moveStatus" role="status"></p>
         </div>

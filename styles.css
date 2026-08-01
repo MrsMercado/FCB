@@ -233,6 +233,11 @@ button {
   background: white;
 }
 
+.danger-button {
+  color: white;
+  background: var(--rust);
+}
+
 .ghost-button {
   min-width: 112px;
   border: 1px solid rgba(246, 207, 79, 0.85);
@@ -346,7 +351,7 @@ th {
 
 .move-panel {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto minmax(160px, 220px) auto auto;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(160px, 220px) auto auto auto;
   align-items: end;
   gap: 10px;
   margin-bottom: 16px;

@@ -11,10 +11,11 @@ It lets you:
 - remember stock numbers in the same browser
 - print the inventory or save it as PDF
 - download the inventory as CSV
-- sort kids by date of birth
+- sort players by date of birth
 - create groups with a selectable size from 10 to 16
 - sort each finished group by player last name
-- click a kid in a group and move them to another group without rebuilding all groups
+- click a player in a group and move them to another group without rebuilding all groups
+- delete a selected player from the group generator
 - create lettered groups, such as Group A, Group B, and Group C
 - assign each group to Camp 1, Camp 2, or Camp 3
 - add FCB coach and Aux. coach names per group

@@ -44,6 +44,7 @@
     selectedKidLabel: document.querySelector("#selectedKidLabel"),
     moveTargetSelect: document.querySelector("#moveTargetSelect"),
     moveKidButton: document.querySelector("#moveKidButton"),
+    deleteSelectedKidButton: document.querySelector("#deleteSelectedKidButton"),
     clearSelectedKidButton: document.querySelector("#clearSelectedKidButton"),
     moveStatus: document.querySelector("#moveStatus"),
     resetButton: document.querySelector("#resetButton"),
@@ -377,7 +378,7 @@
   function clearSelectedKid(message = "") {
     state.selectedKid = null;
     el.movePanel.hidden = true;
-    el.selectedKidLabel.textContent = "No kid selected";
+    el.selectedKidLabel.textContent = "No player selected";
     el.moveTargetSelect.innerHTML = "";
     el.moveStatus.textContent = message;
   }
@@ -403,7 +404,7 @@
     if (!selected || !targetGroup) return;
 
     if (targetGroup.kids.length >= getGroupSize(targetGroup)) {
-      el.moveStatus.textContent = `Group ${targetGroup.letter} is full. Change that group size to 13 or choose another group.`;
+      el.moveStatus.textContent = `Group ${targetGroup.letter} is full. Increase that group size or choose another group.`;
       return;
     }
 
@@ -411,6 +412,22 @@
     targetGroup.kids.push(selected.kid);
     const targetLetter = targetGroup.letter;
     clearSelectedKid(`${selected.kid.firstName} ${selected.kid.lastName} moved to Group ${targetLetter}.`);
+    renderGroups();
+  }
+
+  function updatePlayerCount() {
+    el.kidCount.textContent = state.groups.reduce((sum, group) => sum + group.kids.length, 0) || state.kids.length;
+  }
+
+  function deleteSelectedPlayer() {
+    const selected = findSelectedKid();
+    if (!selected) return;
+
+    const playerName = `${selected.kid.firstName} ${selected.kid.lastName}`.trim() || "Selected player";
+    selected.group.kids = selected.group.kids.filter((kid) => kid.id !== selected.kid.id);
+    state.kids = state.kids.filter((kid) => kid.id !== selected.kid.id);
+    clearSelectedKid(`${playerName} deleted from Group ${selected.group.letter}.`);
+    updatePlayerCount();
     renderGroups();
   }
 
@@ -681,7 +698,7 @@
     state.groups = makeGroups(state.kids);
     updateCampOptions();
 
-    el.kidCount.textContent = state.kids.length;
+    updatePlayerCount();
     el.groupCount.textContent = state.groups.length;
     el.activeSheetName.textContent = state.activeSheet;
     el.summaryGrid.hidden = false;
@@ -938,6 +955,7 @@
   el.printGroupsButton.addEventListener("click", printGroups);
   el.csvGroupsButton.addEventListener("click", downloadGroupsCsv);
   el.moveKidButton.addEventListener("click", moveSelectedKid);
+  el.deleteSelectedKidButton.addEventListener("click", deleteSelectedPlayer);
   el.clearSelectedKidButton.addEventListener("click", () => {
     clearSelectedKid();
     renderGroups();
