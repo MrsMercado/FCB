@@ -2,6 +2,7 @@
   "use strict";
 
   const GROUP_SIZE = 12;
+  const GROUP_SIZE_OPTIONS = [12, 13];
   const SHIRT_SIZES = [
     "KIDS SMALL",
     "KIDS MEDIUM",
@@ -39,6 +40,12 @@
     csvDashboardButton: document.querySelector("#csvDashboardButton"),
     printGroupsButton: document.querySelector("#printGroupsButton"),
     csvGroupsButton: document.querySelector("#csvGroupsButton"),
+    movePanel: document.querySelector("#movePanel"),
+    selectedKidLabel: document.querySelector("#selectedKidLabel"),
+    moveTargetSelect: document.querySelector("#moveTargetSelect"),
+    moveKidButton: document.querySelector("#moveKidButton"),
+    clearSelectedKidButton: document.querySelector("#clearSelectedKidButton"),
+    moveStatus: document.querySelector("#moveStatus"),
     resetButton: document.querySelector("#resetButton"),
     summaryGrid: document.querySelector("#summaryGrid"),
     kidCount: document.querySelector("#kidCount"),
@@ -61,7 +68,9 @@
     fileLabel: "",
     coaches: {},
     campAssignments: {},
+    groupSizes: {},
     groupSorts: {},
+    selectedKid: null,
     activeView: "size",
   };
 
@@ -180,9 +189,10 @@
 
   function buildKids(rows, columnMap) {
     return rows
-      .map((row) => {
+      .map((row, index) => {
         const dob = readDate(row[columnMap.dob]);
         return {
+          id: `kid-${index}`,
           firstName: row[columnMap.firstName] || "",
           lastName: row[columnMap.lastName] || "",
           gender: row[columnMap.gender] || "",
@@ -263,10 +273,10 @@
     return group.kids
       .map((kid, index) => ({ kid, index }))
       .sort((a, b) => {
-      const value = compareValues(getKidSortValue(a.kid, sort.key, a.index), getKidSortValue(b.kid, sort.key, b.index));
-      if (value) return value * direction;
-      return compareKidsByLastName(a.kid, b.kid);
-    })
+        const value = compareValues(getKidSortValue(a.kid, sort.key, a.index), getKidSortValue(b.kid, sort.key, b.index));
+        if (value) return value * direction;
+        return compareKidsByLastName(a.kid, b.kid);
+      })
       .map((item) => item.kid);
   }
 
@@ -329,6 +339,79 @@
       const group = state.groups.find((candidate) => String(candidate.number) === select.dataset.group);
       if (group) setGroupCamp(group, select.value);
     });
+  }
+
+  function groupSizeKey(group) {
+    return `camp-group-size-${group.letter}`;
+  }
+
+  function getGroupSize(group) {
+    const key = groupSizeKey(group);
+    const saved = state.groupSizes[key] ?? localStorage.getItem(key);
+    const parsed = Number(saved || GROUP_SIZE);
+    return GROUP_SIZE_OPTIONS.includes(parsed) ? parsed : GROUP_SIZE;
+  }
+
+  function setGroupSize(group, size) {
+    const parsed = Number(size);
+    const nextSize = GROUP_SIZE_OPTIONS.includes(parsed) ? parsed : GROUP_SIZE;
+    const key = groupSizeKey(group);
+    state.groupSizes[key] = String(nextSize);
+    localStorage.setItem(key, String(nextSize));
+  }
+
+  function captureGroupSizes() {
+    document.querySelectorAll(".group-size-select").forEach((select) => {
+      const group = state.groups.find((candidate) => String(candidate.number) === select.dataset.group);
+      if (group) setGroupSize(group, select.value);
+    });
+  }
+
+  function findSelectedKid() {
+    if (!state.selectedKid) return null;
+    const group = state.groups.find((candidate) => candidate.letter === state.selectedKid.groupLetter);
+    const kid = group?.kids.find((candidate) => candidate.id === state.selectedKid.kidId);
+    return group && kid ? { group, kid } : null;
+  }
+
+  function clearSelectedKid(message = "") {
+    state.selectedKid = null;
+    el.movePanel.hidden = true;
+    el.selectedKidLabel.textContent = "No kid selected";
+    el.moveTargetSelect.innerHTML = "";
+    el.moveStatus.textContent = message;
+  }
+
+  function updateMovePanel() {
+    const selected = findSelectedKid();
+    if (!selected) {
+      clearSelectedKid();
+      return;
+    }
+
+    el.movePanel.hidden = false;
+    el.selectedKidLabel.textContent = `${selected.kid.firstName} ${selected.kid.lastName} from Group ${selected.group.letter}`;
+    el.moveTargetSelect.innerHTML = state.groups
+      .filter((group) => group.letter !== selected.group.letter)
+      .map((group) => `<option value="${group.letter}">Group ${group.letter} (${group.kids.length}/${getGroupSize(group)})</option>`)
+      .join("");
+  }
+
+  function moveSelectedKid() {
+    const selected = findSelectedKid();
+    const targetGroup = state.groups.find((group) => group.letter === el.moveTargetSelect.value);
+    if (!selected || !targetGroup) return;
+
+    if (targetGroup.kids.length >= getGroupSize(targetGroup)) {
+      el.moveStatus.textContent = `Group ${targetGroup.letter} is full. Change that group size to 13 or choose another group.`;
+      return;
+    }
+
+    selected.group.kids = selected.group.kids.filter((kid) => kid.id !== selected.kid.id);
+    targetGroup.kids.push(selected.kid);
+    const targetLetter = targetGroup.letter;
+    clearSelectedKid(`${selected.kid.firstName} ${selected.kid.lastName} moved to Group ${targetLetter}.`);
+    renderGroups();
   }
 
   function stockKey(section, size) {
@@ -448,6 +531,11 @@
     ].join("");
   }
 
+  function renderGroupSizeOptions(group) {
+    const selectedSize = getGroupSize(group);
+    return GROUP_SIZE_OPTIONS.map((size) => `<option value="${size}" ${selectedSize === size ? "selected" : ""}>${size}</option>`).join("");
+  }
+
   function renderSortHeader(group, key, label) {
     const sort = getGroupSort(group);
     const active = sort.key === key;
@@ -460,7 +548,8 @@
     activeGroups().forEach((group) => {
       const card = document.createElement("article");
       card.className = "group-card";
-      const rows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
+      const groupSize = getGroupSize(group);
+      const rows = Array.from({ length: Math.max(groupSize, group.kids.length) }, (_, index) => sortedGroupKids(group)[index] || null);
       const assignedCamp = getGroupCamp(group);
       card.innerHTML = `
         <div class="group-meta">
@@ -468,6 +557,12 @@
             <label for="camp-${group.letter}">Camp</label>
             <select id="camp-${group.letter}" class="camp-assignment-select" data-group="${group.number}">
               ${renderCampAssignmentOptions(assignedCamp)}
+            </select>
+          </div>
+          <div>
+            <label for="size-${group.letter}">Group Size</label>
+            <select id="size-${group.letter}" class="group-size-select" data-group="${group.number}">
+              ${renderGroupSizeOptions(group)}
             </select>
           </div>
           <div>
@@ -499,7 +594,9 @@
             ${rows
               .map(
                 (kid, index) => `
-                  <tr class="${kid ? "" : "empty-row"}">
+                  <tr class="${kid ? "kid-row" : "empty-row"} ${
+                    kid && state.selectedKid?.kidId === kid.id && state.selectedKid?.groupLetter === group.letter ? "selected-row" : ""
+                  }" ${kid ? `data-kid-id="${kid.id}" data-group="${group.number}"` : ""}>
                     <td>${index + 1}</td>
                     <td>${kid?.firstName ? escapeHtml(kid.firstName) : "-"}</td>
                     <td>${kid?.lastName ? escapeHtml(kid.lastName) : "-"}</td>
@@ -532,10 +629,20 @@
         }
       });
     });
+    document.querySelectorAll(".group-size-select").forEach((select) => {
+      select.addEventListener("change", () => {
+        const group = state.groups.find((candidate) => String(candidate.number) === select.dataset.group);
+        if (group) {
+          setGroupSize(group, select.value);
+          renderGroups();
+        }
+      });
+    });
     document.querySelectorAll(".sort-header").forEach((button) => {
       button.addEventListener("click", () => {
         captureCoachInputs();
         captureCampAssignments();
+        captureGroupSizes();
         const group = state.groups.find((candidate) => String(candidate.number) === button.dataset.group);
         if (group) {
           setGroupSort(group, button.dataset.sort);
@@ -543,9 +650,20 @@
         }
       });
     });
+    document.querySelectorAll(".kid-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        const group = state.groups.find((candidate) => String(candidate.number) === row.dataset.group);
+        if (!group) return;
+        state.selectedKid = { kidId: row.dataset.kidId, groupLetter: group.letter };
+        el.moveStatus.textContent = "";
+        renderGroups();
+      });
+    });
+    updateMovePanel();
   }
 
   function refresh() {
+    state.selectedKid = null;
     state.columnMap = buildColumnMap(state.rows);
     const missing = ["firstName", "lastName", "dob", "shirt", "shorts", "shoe"].filter((key) => !state.columnMap[key]);
     if (missing.length) {
@@ -645,7 +763,7 @@
       [],
       ["#", "First Name", "Last Name", "Age", "Gender", "Group"],
     ];
-    const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
+    const rosterRows = Array.from({ length: Math.max(getGroupSize(group), group.kids.length) }, (_, index) => sortedGroupKids(group)[index] || null);
     rosterRows.forEach((kid, index) => {
       rows.push([index + 1, kid?.firstName || "", kid?.lastName || "", kid?.age ?? "", kid?.gender || "", groupLabel(group)]);
     });
@@ -669,6 +787,7 @@
   function exportWorkbook() {
     captureCoachInputs();
     captureCampAssignments();
+    captureGroupSizes();
     const report = XLSX.utils.book_new();
     const groupsToExport = activeGroups();
     const dashboardRows = [
@@ -732,13 +851,14 @@
   function groupsRows() {
     captureCoachInputs();
     captureCampAssignments();
+    captureGroupSizes();
     const rows = [];
     activeGroups().forEach((group) => {
       if (rows.length) rows.push([]);
       rows.push([`Camp ${getGroupCamp(group) || "Unassigned"}`, `Group ${group.letter}`]);
       rows.push(["FCB Coach", getCoach(group, "fcb"), "Aux. Coach", getCoach(group, "aux")]);
       rows.push(["#", "First Name", "Last Name", "Age", "Gender", "Group"]);
-      const rosterRows = Array.from({ length: GROUP_SIZE }, (_, index) => sortedGroupKids(group)[index] || null);
+      const rosterRows = Array.from({ length: Math.max(getGroupSize(group), group.kids.length) }, (_, index) => sortedGroupKids(group)[index] || null);
       rosterRows.forEach((kid, index) => {
         rows.push([index + 1, kid?.firstName || "", kid?.lastName || "", kid?.age ?? "", kid?.gender || "", groupLabel(group)]);
       });
@@ -771,6 +891,7 @@
   function printGroups() {
     captureCoachInputs();
     captureCampAssignments();
+    captureGroupSizes();
     document.body.classList.remove("print-dashboard");
     document.body.classList.add("print-groups");
     window.print();
@@ -781,6 +902,8 @@
     state.rows = [];
     state.groups = [];
     state.fileLabel = "";
+    state.selectedKid = null;
+    clearSelectedKid();
     el.fileInput.value = "";
     el.sheetSelect.innerHTML = "";
     el.controlsPanel.hidden = true;
@@ -796,13 +919,17 @@
   el.sheetSelect.addEventListener("change", () => loadSheet(el.sheetSelect.value));
   el.sortSelect.addEventListener("change", () => {
     captureCoachInputs();
+    captureCampAssignments();
+    captureGroupSizes();
     state.groups = makeGroups(state.kids);
+    state.selectedKid = null;
     updateCampOptions();
     renderGroups();
   });
   el.campSelect.addEventListener("change", () => {
     captureCoachInputs();
     captureCampAssignments();
+    captureGroupSizes();
     renderGroups();
   });
   el.exportButton.addEventListener("click", exportWorkbook);
@@ -810,6 +937,11 @@
   el.csvDashboardButton.addEventListener("click", downloadDashboardCsv);
   el.printGroupsButton.addEventListener("click", printGroups);
   el.csvGroupsButton.addEventListener("click", downloadGroupsCsv);
+  el.moveKidButton.addEventListener("click", moveSelectedKid);
+  el.clearSelectedKidButton.addEventListener("click", () => {
+    clearSelectedKid();
+    renderGroups();
+  });
   el.resetButton.addEventListener("click", reset);
   el.sizeViewButton.addEventListener("click", () => setActiveView("size"));
   el.groupsViewButton.addEventListener("click", () => setActiveView("groups"));

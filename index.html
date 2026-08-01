@@ -60,7 +60,7 @@
           <strong id="kidCount">0</strong>
         </article>
         <article class="stat-card">
-          <span>Groups of 12</span>
+          <span>Groups</span>
           <strong id="groupCount">0</strong>
         </article>
         <article class="stat-card">
@@ -93,6 +93,14 @@
             <button class="secondary-button" id="printGroupsButton" type="button">Print / PDF</button>
             <button class="secondary-button" id="csvGroupsButton" type="button">Download CSV</button>
           </div>
+        </div>
+        <div class="move-panel" id="movePanel" hidden>
+          <strong id="selectedKidLabel">No kid selected</strong>
+          <label for="moveTargetSelect">Move to</label>
+          <select id="moveTargetSelect"></select>
+          <button id="moveKidButton" type="button">Move kid</button>
+          <button class="secondary-button" id="clearSelectedKidButton" type="button">Clear</button>
+          <p id="moveStatus" role="status"></p>
         </div>
         <div id="groupsPreview" class="groups-preview"></div>
       </section>

@@ -12,8 +12,9 @@ It lets you:
 - print the inventory or save it as PDF
 - download the inventory as CSV
 - sort kids by date of birth
-- create groups of 12
+- create groups with a selectable size of 12 or 13
 - sort each finished group by player last name
+- click a kid in a group and move them to another group without rebuilding all groups
 - create lettered groups, such as Group A, Group B, and Group C
 - assign each group to Camp 1, Camp 2, or Camp 3
 - add FCB coach and Aux. coach names per group
