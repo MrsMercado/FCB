@@ -404,8 +404,12 @@
     if (!selected || !targetGroup) return;
 
     if (targetGroup.kids.length >= getGroupSize(targetGroup)) {
-      el.moveStatus.textContent = `Group ${targetGroup.letter} is full. Increase that group size or choose another group.`;
-      return;
+      const nextSize = GROUP_SIZE_OPTIONS.find((size) => size > targetGroup.kids.length);
+      if (!nextSize) {
+        el.moveStatus.textContent = `Group ${targetGroup.letter} is already at the maximum size of ${GROUP_SIZE_OPTIONS.at(-1)}. Choose another group.`;
+        return;
+      }
+      setGroupSize(targetGroup, nextSize);
     }
 
     selected.group.kids = selected.group.kids.filter((kid) => kid.id !== selected.kid.id);

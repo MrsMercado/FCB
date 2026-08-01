@@ -15,6 +15,7 @@ It lets you:
 - create groups with a selectable size from 10 to 16
 - sort each finished group by player last name
 - click a player in a group and move them to another group without rebuilding all groups
+- automatically expand a target group up to 16 when moving a player into a full group
 - delete a selected player from the group generator
 - create lettered groups, such as Group A, Group B, and Group C
 - assign each group to Camp 1, Camp 2, or Camp 3
